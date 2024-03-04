@@ -508,7 +508,8 @@ function _M.filter(ctx, conf, plugins, route_conf, phase)
             -- 3. execute the rewrite phase of the plugins on consumer(phase: rewrite_in_consumer)
             -- in this case, we need to skip the plugins that was already executed(step 1)
             if phase == "rewrite_in_consumer" and not plugin_conf._from_consumer then
-                plugin_conf._skip_rewrite_in_consumer = true
+                --modify:init.lua no executed
+                --plugin_conf._skip_rewrite_in_consumer = true
             end
 
             tmp_plugin_objs[plugin_conf] = plugin_obj
