@@ -688,10 +688,7 @@ function _M.http_access_phase()
         script.run("access", api_ctx)
 
     else
-        local plugins = plugin.filter(api_ctx, route)
-        api_ctx.plugins = plugins
-
-        plugin.run_plugin("rewrite", plugins, api_ctx)
+        local has_run_consumer_plugin = false
         if api_ctx.consumer then
             local changed
             local group_conf
@@ -717,14 +714,24 @@ function _M.http_access_phase()
 
             if changed then
                 api_ctx.matched_route = route
-                core.table.clear(api_ctx.plugins)
+                if (api_ctx.plugins) then
+                    core.table.clear(api_ctx.plugins)
+                end
                 local phase = "rewrite_in_consumer"
                 api_ctx.plugins = plugin.filter(api_ctx, route, api_ctx.plugins, nil, phase)
                 -- rerun rewrite phase for newly added plugins in consumer
                 plugin.run_plugin(phase, api_ctx.plugins, api_ctx)
+                has_run_consumer_plugin = true
             end
         end
-        plugin.run_plugin("access", plugins, api_ctx)
+
+        if (not has_run_consumer_plugin) then
+            local plugins = plugin.filter(api_ctx, route)
+            api_ctx.plugins = plugins
+            plugin.run_plugin("rewrite", plugins, api_ctx)
+        end
+
+        plugin.run_plugin("access", api_ctx.plugins, api_ctx)
     end
 
     _M.handle_upstream(api_ctx, route, enable_websocket)
